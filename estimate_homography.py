@@ -1,12 +1,15 @@
 import argparse
 import cv2
 import numpy as np
-
+import pickle
 
 def parse_args():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--images', nargs='+', default='')
+    parser.add_argument('--images', nargs='+', default=None)
+    parser.add_argument('--outpath',  default=None)
+    parser.add_argument('--H', action='store_true')
+
     args = parser.parse_args()
     
     return args
@@ -51,16 +54,31 @@ def get_matches_homography(image_array_0, image_array_1):
     matches = match_points(features_0, features_1)    
     H = estimate_homography(matches, keypoints_0, keypoints_1)
 
-    return matches, H
+    return H
 
+
+def save_homography_images(image_1, image_2, H, out_file):
+
+    out_d = {
+        'images': [image_1, image_2],
+        'H': H
+    }
+
+    with open(out_file, 'wb') as f:
+        pickle.dump(out_d, f)
 
 
 def main():
 
     args = parse_args()
     images = read_images(args.images)
-    matches, H = get_matches_homography(images[0], images[1])
-    print(H)
+    H = get_matches_homography(images[0], images[1])
+    
+    if args.outpath:
+        save_homography_images(args.images[0], args.images[1], H, args.outpath)
+
+    if args.H:
+        print(H)
 
 
 if __name__ == '__main__':
